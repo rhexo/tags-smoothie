@@ -1,5 +1,42 @@
-# Compiled
-*.elc
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
 
-# Packaging
-.cask
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Customizing
+bin*/
+build*/
+# ctags file
+TAGS
+# Projectile project file
+.projectile
+# Temp files
+*~
+# clang compete file
+.clang_complete
+# irony-mode
+*.core

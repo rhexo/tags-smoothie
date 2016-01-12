@@ -194,6 +194,5 @@
     ;; return as result
     include-list))
 
-
-
-
+(provide 'tags-smoothie)
+;;; tags-smoothie.el ends here

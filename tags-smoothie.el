@@ -96,8 +96,8 @@
   (if (string-match "#include[ \t]+" line)
       (let ((result ""))
         (setq result 
-           (replace-regexp-in-string "[<>\"]" "" ;; remove <|>|" symbols from include argument 
-              (replace-regexp-in-string "#include[ \t]+" "" line))) ;; remove #include prefix
+              (replace-regexp-in-string "[<>\"]" "" ;; remove <|>|" symbols from include argument 
+                                        (replace-regexp-in-string "#include[ \t]+" "" line))) ;; remove #include prefix
         result)))
 
 ;; complete list entries with system include paths. Before this declare variable : include-search-path
@@ -123,9 +123,22 @@
     ;; return as result
     file-path))
 
+;; get list of sorce include files.
+(defun tags-smoothie-source-get-complete-list (src-file-path)
+  "Get list of source includes represented as full path strings."
+  (let ((lines-list (tags-smoothie-read-lines src-file-path))
+        (result-list nil)
+        (item nil))    
+    (while lines-list
+      (setq item (tags-smoothie-source-get-complete-path (car lines-list)))
+      (if (not (eq item ""))
+          (push item result-list))
+      (setq lines-list (cdr lines-list)))
+    result-list))
 
 ;; parse sources lines. Stay only substrings of #include derictive
-(mapcar 'tags-smoothie-source-get-complete-path (tags-smoothie-read-lines src-file-path))
+(message "list: %s" (tags-smoothie-source-get-complete-list src-file-path))
+(message "lines: %s" (tags-smoothie-read-lines src-file-path))
 
 ;; get directories
 (defun tags-smoothie-fs-get-dir-list (path exclude-dir)
@@ -148,13 +161,13 @@
 
 (print-elements-recursively (tags-smoothie-fs-get-dir-list test-project-dir test-exclude-list))
 ;; OUtput
-  ;; "/usr/home/rhexo/ydisk/proj/app-lib/MPL/mpl__views_and_iterator_adapters_1/include"
+;; "/usr/home/rhexo/ydisk/proj/app-lib/MPL/mpl__views_and_iterator_adapters_1/include"
 
 ;; (print-elements-recursively (tags-smoothie-fs-get-dir-list test-project-dir nil))
 ;; Output
-  ;; "/usr/home/rhexo/ydisk/proj/app-lib/MPL/mpl__views_and_iterator_adapters_1/include"
-  ;; "/usr/home/rhexo/ydisk/proj/app-lib/MPL/mpl__views_and_iterator_adapters_1/build"
-  ;; "/usr/home/rhexo/ydisk/proj/app-lib/MPL/mpl__views_and_iterator_adapters_1/bin"
+;; "/usr/home/rhexo/ydisk/proj/app-lib/MPL/mpl__views_and_iterator_adapters_1/include"
+;; "/usr/home/rhexo/ydisk/proj/app-lib/MPL/mpl__views_and_iterator_adapters_1/build"
+;; "/usr/home/rhexo/ydisk/proj/app-lib/MPL/mpl__views_and_iterator_adapters_1/bin"
 
 (setq tags-smoothie-cpp-files-regexp "\\(\\.cxx$\\)\\|\\(\\.cpp$\\)\\|\\(\\.cc$\\)\\|\\(\\.hpp$\\)\\|\\(\\.hh$\\)\\|\\(\\.hxx$\\)\\|\\(\\.h$\\)")
 
@@ -196,16 +209,57 @@
 (setq tags-smoothie-include-list nil)
 (tags-smoothie-fs-get-project-sources test-project-dir tags-smoothie-cpp-dir-to-exclude)
 
+;; process step
+(defun tags-smoothie-process-step (src-list proc-list)
+  "Algorithm:
+1. loop at sources list. 
+2. parse include directive
+3. get list of directive parameters and complete it
+4. exclude processed entries
+5. run recursion step "
+  (let ((current-list nil)) 
+    (if (not (null src-list))
+        (progn
+          (while src-list
+            (if (eq (-contains? proc-list (car src-list)) nil)
+                (progn
+                  ;; entry dosen`t process early
+                  (push (car src-list) proc-list)
+                  ;; parse include directives
+                  (let ((parse-list (tags-smoothie-source-get-complete-list (car src-list)))
+                        (new-list nil)
+                        (result-list nil))
+                    ;; exclude processed entries
+                    (while parse-list
+                      (if (not (-contains? proc-list (car parse-list)))
+                          (push (car parse-list) new-list))
+                      (setq parse-list (cdr parse-list)))
+                    ;; call recursion step
+                    (if (not (null new-list))
+                        (progn 
+                          (setq result-list (tags-smoothie-process-step new-list proc-list))
+                          (if (not (null result-list))
+                              (while result-list
+                                (if (not (-contains? proc-list (car result-list)))
+                                    (push (car result-list) proc-list))                                    
+                                (setq result-list (cdr result-list))))))
+                    (setq current-list proc-list))))
+            (setq src-list (cdr src-list)))))
+    ;; return as result
+    current-list))
+
 ;; fill tags-smoothie-list
 (defun tags-smoothie-get-list (dev-dir)
-  "Parse project sources and build full system include paths list that  using in project"
-  (let (
-        ;; check-list - temp list of sources to parse. if path exists in include-list need to be exclude form check-list
-        (check-list nil)
-        (include-list nil))
-    
+  "Parse project sources and build list of system includes that using in project. Includes represents as full path strings"
+  (let ((proj-list (tags-smoothie-fs-get-project-sources dev-dir tags-smoothie-cpp-dir-to-exclude))
+        (include-list nil)
+        (proc-list nil))
+    (setq include-list (tags-smoothie-process-step proj-list proc-list))
     ;; return as result
     include-list))
+
+;;(print-elements-recursively (tags-smoothie-get-list test-project-dir))
+(message "result: %s" (tags-smoothie-get-list test-project-dir))
 
 
 

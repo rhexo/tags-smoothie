@@ -38,50 +38,7 @@
 ;;; Code:
 
 
-;; (defvar tags-smoothie-project-dir (nil)
-;;   "TAGS file dir as project dir")
-
-;; (defun tags-smoothie-project-traversal (string)
-;;   "Traversal sources tree. Parse project sources and gets it`'s includes as list."
-;;   (setq tags-smoothie-project-dir 'string))
-
-
-;; (defun tags-smoothie-parse-file (string)
-;;   "Get list of #include declarations in file."
-;;   (""))
-
-;; (defun tags-smoothie-get-project-files ()
-;;   "Retrieve c/c++ project files."
-;;   )
-
-;; ;;; Customization
-;; (defgroup tags-smoothie nil
-;;   "etags generation algorithm."
-;;   :group 'tools)
-
-;; (defcustom tags-smoothie-include-path "/usr/include/"
-;;   "external and system include paths that uses in c/c++ project files."
-;;   :group 'tags-smoothie
-;;   :type '(repeat string))
-
 (require 'dash)
-
-;; helper function (print)
-(defun print-elements-recursively (list)
-  "Print each element of LIST on a line of its own. Uses recursion."
-  (when list                     ; do-again-test
-    (print (car list))           ; body
-    (print-elements-recursively  ; recursive call
-     (cdr list))))               ; next-step-expression
-
-;; set path to parsed file (helper definition)
-(setq src-file-path  "/usr/home/rhexo/ydisk/proj/app-lib/MPL/mpl__views_and_iterator_adapters_1/include/view_example.hpp")
-
-
-;; List on files to tags
-(defvar tags-smoothie-include-list)
-;; initialize
-(setq tags-smoothie-include-list nil)
 
 ;; Read file as list of lines
 (defun tags-smoothie-read-lines (filePath)
@@ -100,7 +57,9 @@
                                         (replace-regexp-in-string "#include[ \t]+" "" line))) ;; remove #include prefix
         result)))
 
-;; complete list entries with system include paths. Before this declare variable : include-search-path
+;; complete list entries with system include paths.
+(defvar tags-smoothie-search-path)
+
 (setq tags-smoothie-search-path
       '("/usr/include/"                    ;; system/include support
         "/usr/local/include/"              ;; local/include support
@@ -136,10 +95,6 @@
       (setq lines-list (cdr lines-list)))
     result-list))
 
-;; parse sources lines. Stay only substrings of #include derictive
-(message "list: %s" (tags-smoothie-source-get-complete-list src-file-path))
-(message "lines: %s" (tags-smoothie-read-lines src-file-path))
-
 ;; get directories
 (defun tags-smoothie-fs-get-dir-list (path exclude-dir)
   "Get list of subdirecotries"
@@ -154,23 +109,12 @@
     ;; return as result
     dir-list))
 
-(setq test-exclude-list '("/usr/home/rhexo/ydisk/proj/app-lib/MPL/mpl__views_and_iterator_adapters_1/bin"
-                          "/usr/home/rhexo/ydisk/proj/app-lib/MPL/mpl__views_and_iterator_adapters_1/build"))
-
-(setq test-project-dir "/usr/home/rhexo/ydisk/proj/app-lib/MPL/mpl__views_and_iterator_adapters_1")
-
-(print-elements-recursively (tags-smoothie-fs-get-dir-list test-project-dir test-exclude-list))
-;; OUtput
-;; "/usr/home/rhexo/ydisk/proj/app-lib/MPL/mpl__views_and_iterator_adapters_1/include"
-
-;; (print-elements-recursively (tags-smoothie-fs-get-dir-list test-project-dir nil))
-;; Output
-;; "/usr/home/rhexo/ydisk/proj/app-lib/MPL/mpl__views_and_iterator_adapters_1/include"
-;; "/usr/home/rhexo/ydisk/proj/app-lib/MPL/mpl__views_and_iterator_adapters_1/build"
-;; "/usr/home/rhexo/ydisk/proj/app-lib/MPL/mpl__views_and_iterator_adapters_1/bin"
-
+;; files extentions that we will parse
+(defvar tags-smoothie-cpp-files-regexp)
 (setq tags-smoothie-cpp-files-regexp "\\(\\.cxx$\\)\\|\\(\\.cpp$\\)\\|\\(\\.cc$\\)\\|\\(\\.hpp$\\)\\|\\(\\.hh$\\)\\|\\(\\.hxx$\\)\\|\\(\\.h$\\)")
 
+;; project directories that will be excluded from overview
+(defvar tags-smoothie-cpp-dir-to-exclude)
 (setq tags-smoothie-cpp-dir-to-exclude '("/build" "/bin"))
 
 ;; get sources
@@ -184,11 +128,6 @@
           (push item sources-list)))
     ;; return as result
     sources-list))
-
-(print-elements-recursively (tags-smoothie-fs-get-sources-list test-project-dir tags-smoothie-cpp-files-regexp))
-
-;; (tags-smoothie-fs-get-dir-list test-project-dir (mapcar (lambda (elem) (concat test-project-dir elem)) tags-smoothie-cpp-dir-to-exclude))
-;; (mapcar (lambda (elem) (concat test-project-dir elem)) tags-smoothie-cpp-dir-to-exclude)
 
 ;; get list of project sources
 (defun tags-smoothie-fs-get-project-sources (path exclude-dir)
@@ -205,9 +144,6 @@
     ;; return as result
     src-list
     ))
-
-(setq tags-smoothie-include-list nil)
-(tags-smoothie-fs-get-project-sources test-project-dir tags-smoothie-cpp-dir-to-exclude)
 
 ;; process step
 (defun tags-smoothie-process-step (src-list proc-list)
@@ -257,9 +193,6 @@
     (setq include-list (tags-smoothie-process-step proj-list proc-list))
     ;; return as result
     include-list))
-
-;;(print-elements-recursively (tags-smoothie-get-list test-project-dir))
-(message "result: %s" (tags-smoothie-get-list test-project-dir))
 
 
 

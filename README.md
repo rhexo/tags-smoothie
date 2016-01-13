@@ -14,6 +14,15 @@ Need to be added in .emacs
 (add-to-list 'load-path "/home/rhexo/.emacs.d/tags-smoothie")
 (require 'tags-smoothie)
 
+;; sets search directories for system includes (see defaults in tags-smoothie.el)
+(setq tags-smoothie-search-path
+      '("/usr/include/"                    ;; system/include support
+        "/usr/local/include/"              ;; local/include support
+        "/usr/include/c++/v1/"))           ;; c++ support
+
+;; project directories that will be excluded from overview (see defaults in tags-smoothie.el)
+(setq tags-smoothie-cpp-dir-to-exclude '("/build" "/bin"))
+
 ;; redefinition of projectile regeneration tags procedure
 (defun projectile-regenerate-tags ()
   "Regenerate the project's [e|g]tags. Override function"

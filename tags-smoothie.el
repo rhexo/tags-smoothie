@@ -194,5 +194,15 @@
     ;; return as result
     include-list))
 
+;; get tags-smoothies as string
+(defun tags-smoothie-get-files-stream (dev-dir)
+  "Transform list to text stream"
+  (let ((include-list (tags-smoothie-get-list dev-dir))
+        (text-stream ""))
+    (while include-list
+      (setq text-stream (concat text-stream (car include-list) " "))
+      (setq include-list (cdr include-list)))
+    text-stream))
+
 (provide 'tags-smoothie)
 ;;; tags-smoothie.el ends here

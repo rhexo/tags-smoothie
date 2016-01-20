@@ -9,7 +9,7 @@ Self recursion tags generation agorithm based on exctags
 Need to be added in .emacs
 
 ```elisp
-(setq projectile-tags-command "/usr/local/bin/exctags -Re -f \"%s\" %s %s")
+(setq projectile-tags-command "/usr/local/bin/exctags -Re -f \"%s\" --language-force=c++ %s %s")
 
 (add-to-list 'load-path "/home/rhexo/.emacs.d/tags-smoothie")
 (require 'tags-smoothie)
@@ -43,5 +43,7 @@ Need to be added in .emacs
       (error shell-output))
     (visit-tags-table tags-file)))
 ```
+--language-force=c++ needed for compiling includes like string or map, i.e. includes without file extension
 
+If you are using tags-smoothie for non c/c++ projects you have to omitted this option.
 
